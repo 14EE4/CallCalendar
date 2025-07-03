@@ -3,16 +3,19 @@ package com.example.callcalendar;
 
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -20,12 +23,25 @@ import androidx.core.content.ContextCompat;
 public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_PERMISSIONS = 1;
+    private static final String TAG = "MainActivity";
     Button btn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Button btnShowSamsungGuide = findViewById(R.id.btn_show_samsung_guide); // 레이아웃에 정의된 버튼 ID
+        if (btnShowSamsungGuide != null) {
+            btnShowSamsungGuide.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showSamsungCallRecordingGuideDialog();
+                }
+            });
+        } else {
+            Log.e(TAG, "버튼 ID 'btn_show_samsung_guide'를 activity_main.xml에서 찾을 수 없습니다.");
+        }
 
         btn = findViewById(R.id.btnShowRecordings);
         btn.setOnClickListener(v -> {
@@ -35,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         checkPermissions();
+
 
     }
 
@@ -52,6 +69,46 @@ public class MainActivity extends AppCompatActivity {
                     REQUEST_PERMISSIONS);
         } else {
             Toast.makeText(this, "권한이 모두 허용되었습니다.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showSamsungCallRecordingGuideDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this); // 'this'는 MainActivity 컨텍스트
+        builder.setTitle("삼성 전화 녹음 설정 안내");
+        builder.setMessage("통화 녹음 기능을 사용하려면 삼성 전화 앱의 설정을 확인하거나 활성화해야 합니다.\n\n" +
+                "경로 예시:\n" +
+                "1. 전화 앱 실행\n" +
+                "2. 우측 상단 '더보기(점3개)' 선택\n" +
+                "3. '설정' 선택\n" +
+                "4. '통화 녹음' 메뉴에서 설정 확인\n\n" +
+                "'확인'을 누르면 전화 앱으로 이동합니다.");
+
+        builder.setPositiveButton("확인 (전화 앱으로 이동)", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                openSamsungDialer();
+            }
+        });
+        builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void openSamsungDialer() {
+        Intent intent = new Intent(Intent.ACTION_DIAL);
+
+
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        } else {
+            Toast.makeText(this, "전화 앱을 열 수 없습니다. 수동으로 전화 앱을 실행해주세요.", Toast.LENGTH_LONG).show();
+
         }
     }
 
